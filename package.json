@@ -3,6 +3,7 @@
   "publisher": "alepiumetti",
   "displayName": "budget-openrouter",
   "description": "Para ver cuandos creditos me quedan en open router",
+  "icon": "images/icon.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/alepiumetti/budget-openrouter.git"
