@@ -1,0 +1,49 @@
+{
+  "name": "budget-openrouter",
+  "displayName": "badge-openrouter",
+  "description": "Para ver cuandos creditos me quedan en open router",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.110.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:budget-openrouter.refresh"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "budget-openrouter.refresh",
+        "title": "OpenRouter: Refresh Budget"
+      }
+    ],
+    "configuration": {
+      "title": "Budget OpenRouter",
+      "properties": {
+        "budgetOpenrouter.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "OpenRouter API key usada para consultar uso y créditos restantes. Alternativa: variable de entorno OPENROUTER_API_KEY.",
+          "scope": "application"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "pretest": "npm run lint",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.116.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "eslint": "^9.39.3",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2"
+  }
+}
