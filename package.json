@@ -44,6 +44,9 @@
     }
   },
   "scripts": {
+    "prepare": "sh scripts/setup-git-hooks.sh",
+    "bump:from-commits": "sh scripts/auto-bump-from-commits.sh",
+    "pre-commit": "npm run bump:from-commits",
     "lint": "eslint .",
     "pretest": "npm run lint",
     "test": "vscode-test"

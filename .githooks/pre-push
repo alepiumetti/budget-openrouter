@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+set -eu
+
+if sh scripts/auto-bump-from-commits.sh; then
+  status=0
+else
+  status=$?
+fi
+
+if [ "$status" -eq 20 ]; then
+  echo "[pre-push] Se creo un commit de bump de version. Ejecuta 'git push' nuevamente para incluirlo."
+  exit 1
+fi
+
+exit "$status"
