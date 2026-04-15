@@ -51,15 +51,15 @@ En cada ejecucion del comando:
 1. Se descarga el catalogo actual de `GET https://openrouter.ai/api/v1/models`.
 2. Se filtran candidatos de programacion por palabras clave en `id`/`name` (por ejemplo `codex`, `coder`, `codestral`, `gpt`, `claude`, `gemini`, `deepseek`, `qwen`, `grok`) y se excluyen modelos `:free`.
 3. Se calcula un score de calidad (heuristico) ponderando:
-	- Senales de coding (por ejemplo `codex`, `coder`, `code`)
-	- Familia del modelo (por ejemplo `gpt`, `claude`, `gemini`, etc.)
-	- Contexto disponible (`top_provider.context_length`)
+   - Senales de coding (por ejemplo `codex`, `coder`, `code`)
+   - Familia del modelo (por ejemplo `gpt`, `claude`, `gemini`, etc.)
+   - Contexto disponible (`top_provider.context_length`)
 4. Se calcula costo total por 1M:
-	- `costPer1m = (pricing.prompt + pricing.completion) * 1_000_000`
+   - `costPer1m = (pricing.prompt + pricing.completion) * 1_000_000`
 5. Se calcula score de valor:
-	- `value = quality / max(costPer1m, 0.01)`
+   - `value = quality / max(costPer1m, 0.01)`
 6. Se muestran dos listas:
-	- `Top calidad`: mayor `quality`
-	- `Mejor costo/rendimiento`: mayor `value`
+   - `Top calidad`: mayor `quality`
+   - `Mejor costo/rendimiento`: mayor `value`
 
 Nota: este ranking es orientativo (heuristico) y puede variar cuando OpenRouter agrega/cambia modelos o precios.

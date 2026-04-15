@@ -119,7 +119,10 @@ function codingCapabilityScore(model) {
     score += 4;
   }
 
-  const contextLength = parseFiniteNumber(model?.top_provider?.context_length, 0);
+  const contextLength = parseFiniteNumber(
+    model?.top_provider?.context_length,
+    0,
+  );
   if (contextLength > 0) {
     score += Math.log10(contextLength) * 1.5;
   }
@@ -131,7 +134,10 @@ function modelCostPerMillion(model) {
   const promptPerToken = parseFiniteNumber(model?.pricing?.prompt, NaN);
   const completionPerToken = parseFiniteNumber(model?.pricing?.completion, NaN);
 
-  if (!Number.isFinite(promptPerToken) || !Number.isFinite(completionPerToken)) {
+  if (
+    !Number.isFinite(promptPerToken) ||
+    !Number.isFinite(completionPerToken)
+  ) {
     return Number.POSITIVE_INFINITY;
   }
 
@@ -277,13 +283,16 @@ async function showTopCodingModels() {
       ];
 
       if (!picks.length) {
-        throw new Error('No se encontraron modelos recomendados en el catalogo actual');
+        throw new Error(
+          'No se encontraron modelos recomendados en el catalogo actual',
+        );
       }
 
       return vscode.window.showQuickPick(picks, {
         matchOnDescription: true,
         matchOnDetail: true,
-        placeHolder: 'Selecciona un modelo para copiar su ID (calculado en vivo)',
+        placeHolder:
+          'Selecciona un modelo para copiar su ID (calculado en vivo)',
       });
     },
   );
@@ -293,9 +302,7 @@ async function showTopCodingModels() {
   }
 
   await vscode.env.clipboard.writeText(picked.modelId);
-  vscode.window.showInformationMessage(
-    `Modelo copiado: ${picked.modelId}`,
-  );
+  vscode.window.showInformationMessage(`Modelo copiado: ${picked.modelId}`);
 }
 
 async function updateStatusBar(statusBarItem) {
