@@ -1,10 +1,15 @@
 {
   "name": "budget-openrouter",
-  "displayName": "badge-openrouter",
+  "publisher": "alepiumetti",
+  "displayName": "budget-openrouter",
   "description": "Para ver cuandos creditos me quedan en open router",
-  "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alepiumetti/budget-openrouter.git"
+  },
+  "version": "0.0.3",
   "engines": {
-    "vscode": "^1.110.0"
+    "vscode": "^1.116.0"
   },
   "categories": [
     "Other"
