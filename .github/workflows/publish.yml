@@ -71,8 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - validate
-      - detect_changes
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.detect_changes.outputs.package_changed == 'true'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     concurrency:
       group: publish-${{ github.ref }}
       cancel-in-progress: false
