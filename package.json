@@ -16,7 +16,8 @@
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onCommand:budget-openrouter.refresh"
+    "onCommand:budget-openrouter.refresh",
+    "onCommand:budget-openrouter.showTopModels"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -24,6 +25,10 @@
       {
         "command": "budget-openrouter.refresh",
         "title": "OpenRouter: Refresh Budget"
+      },
+      {
+        "command": "budget-openrouter.showTopModels",
+        "title": "OpenRouter: Show Top Coding Models"
       }
     ],
     "configuration": {
