@@ -16,28 +16,6 @@ Define la API key en una de estas opciones:
 - En el tooltip muestra tambien credito restante y uso diario
 - Al hacer click en el item del status bar, vuelve a consultar la API
 
-## Versionado automatico por commits
-
-El proyecto incluye un hook de Git en `pre-push` que evalua los mensajes de los commits pendientes de push y aplica bump de version automaticamente.
-
-Reglas configuradas:
-
-- `FEAT` o `FT` => `major`
-- `REF` => `minor`
-- `FIX`, `ADD`, `DOC` o `PATCH` => `patch`
-- Prioridad cuando hay varios tipos en commits del push: `major > minor > patch`
-
-Cuando detecta un bump:
-
-1. Ejecuta `npm version <tipo> --no-git-tag-version`.
-2. Hace commit automatico del cambio en `package.json` (y `package-lock.json` si corresponde).
-3. Cancela el push actual para que ejecutes `git push` nuevamente e incluyas el commit de bump.
-
-Para asegurar que el hook quede activo en tu repo local:
-
-- Ejecuta `npm install` (dispara `prepare`) o `npm run prepare`.
-- Opcional: puedes ejecutar `npm run pre-commit` para correr la misma logica manualmente antes de commitear/pushear.
-
 ## Comando
 
 - `OpenRouter: Refresh Budget`
