@@ -26,7 +26,6 @@ Define la API key en una de estas opciones:
 ## Comando
 
 - `OpenRouter: Refresh Budget`
-- `OpenRouter: Show Top Coding Models`
 
 # budget-openrouter
 
