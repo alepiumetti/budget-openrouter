@@ -12,8 +12,15 @@ Define la API key en una de estas opciones:
 ## Como funciona
 
 - Al activar la extension, hace una request a `GET https://openrouter.ai/api/v1/key`
-- Muestra en el status bar el gasto total (`usage`)
-- En el tooltip muestra tambien credito restante y uso diario
+- Muestra en el status bar el credito restante sobre el total (`limit_remaining / limit`)
+- El color del item varia de verde (presupuesto lleno) a rojo (presupuesto agotado)
+- En el tooltip muestra:
+  - Presupuesto total y ciclo de reset (`limit`, `limit_reset`)
+  - Credito restante (`limit_remaining`)
+  - Gasto acumulado total (`usage`)
+  - Gasto del mes en curso (`usage_monthly`)
+  - Gasto de la semana en curso (`usage_weekly`)
+  - Gasto del dia (`usage_daily`)
 - Al hacer click en el item del status bar, vuelve a consultar la API
 
 ## Comando
@@ -63,3 +70,7 @@ En cada ejecucion del comando:
    - `Mejor costo/rendimiento`: mayor `value`
 
 Nota: este ranking es orientativo (heuristico) y puede variar cuando OpenRouter agrega/cambia modelos o precios.
+
+### API REFERENCE
+
+(https://openrouter.ai/openapi.json)[https://openrouter.ai/openapi.json]

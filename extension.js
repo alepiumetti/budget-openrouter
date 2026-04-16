@@ -193,10 +193,10 @@ function getApiKey() {
   return config.get('apiKey') || process.env.OPENROUTER_API_KEY || '';
 }
 
-function ratioToColor(ratio) {
-  const clamped = Math.max(0, Math.min(1, ratio));
-  const red = Math.round(255 * clamped);
-  const green = Math.round(255 * (1 - clamped));
+function ratioToColor(remainingRatio) {
+  const clamped = Math.max(0, Math.min(1, remainingRatio));
+  const red = Math.round(255 * (1 - clamped));
+  const green = Math.round(255 * clamped);
   const blue = 80;
 
   return `#${red.toString(16).padStart(2, '0')}${green.toString(16).padStart(2, '0')}${blue
@@ -340,17 +340,29 @@ async function updateStatusBar(statusBarItem) {
         : `$${formatCredits(remainingValue)}`;
 
     if (totalValue !== null && totalValue > 0) {
-      const ratio = usageValue / totalValue;
-      statusBarItem.color = ratioToColor(ratio);
+      const remainingRatio =
+        remainingValue !== null
+          ? remainingValue / totalValue
+          : 1 - usageValue / totalValue;
+      statusBarItem.color = ratioToColor(remainingRatio);
     } else {
       statusBarItem.color = undefined;
     }
 
+    const resetCycle =
+      data.limit_reset === 'monthly'
+        ? 'mensual'
+        : data.limit_reset
+          ? String(data.limit_reset)
+          : null;
+
     statusBarItem.text = `$(graph) OpenRouter: ${remaining}/${total}`;
     statusBarItem.tooltip = [
-      `Presupuesto total: ${total}`,
+      `Presupuesto total: ${total}${resetCycle ? ` (ciclo ${resetCycle})` : ''}`,
       `Restante: ${remaining}`,
       `Gasto total: $${used}`,
+      `Este mes: $${formatCredits(data.usage_monthly)}`,
+      `Esta semana: $${formatCredits(data.usage_weekly)}`,
       `Hoy: $${formatCredits(data.usage_daily)}`,
       'Click para refrescar',
     ].join('\n');
