@@ -3,10 +3,14 @@
 const vscode = require('vscode');
 
 const OPENROUTER_KEY_URL = 'https://openrouter.ai/api/v1/key';
-const OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models';
 const REFRESH_COMMAND = 'budget-openrouter.refresh';
-const SHOW_TOP_MODELS_COMMAND = 'budget-openrouter.showTopModels';
-const MAX_MODELS_PER_SECTION = 8;
+
+const outputChannel = vscode.window.createOutputChannel('Budget OpenRouter');
+
+function log(message) {
+  const timestamp = new Date().toLocaleTimeString('es-ES');
+  outputChannel.appendLine(`[${timestamp}] ${message}`);
+}
 
 function parseNullableNumber(value) {
   if (value === null || value === undefined) {
@@ -30,167 +34,17 @@ function formatCredits(value) {
   return num.toFixed(2);
 }
 
-function formatUsdPerMillion(pricePerToken) {
-  const parsed = Number(pricePerToken);
-  if (!Number.isFinite(parsed)) {
-    return 'N/A';
-  }
-
-  return (parsed * 1000000).toFixed(2);
-}
-
-function parseFiniteNumber(value, fallback = 0) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
-
-function formatInteger(value) {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) {
-    return 'N/A';
-  }
-
-  return parsed.toLocaleString('es-ES');
-}
-
-function isCodingCandidate(model) {
-  const id = String(model?.id || '').toLowerCase();
-  const name = String(model?.name || '').toLowerCase();
-  const text = `${id} ${name}`;
-
-  if (text.includes(':free')) {
-    return false;
-  }
-
-  const hardKeywords = ['codex', 'coder', 'codestral', 'code'];
-  if (hardKeywords.some((keyword) => text.includes(keyword))) {
-    return true;
-  }
-
-  const generalKeywords = [
-    'claude',
-    'gpt',
-    'gemini',
-    'deepseek',
-    'qwen',
-    'command',
-    'grok',
-  ];
-
-  return generalKeywords.some((keyword) => text.includes(keyword));
-}
-
-function codingCapabilityScore(model) {
-  const id = String(model?.id || '').toLowerCase();
-  const name = String(model?.name || '').toLowerCase();
-  const text = `${id} ${name}`;
-
-  let score = 0;
-
-  if (text.includes('codex')) {
-    score += 12;
-  }
-  if (text.includes('coder')) {
-    score += 10;
-  }
-  if (text.includes('codestral')) {
-    score += 9;
-  }
-  if (text.includes('code')) {
-    score += 3;
-  }
-
-  if (text.includes('claude')) {
-    score += 7;
-  }
-  if (text.includes('gpt')) {
-    score += 7;
-  }
-  if (text.includes('gemini')) {
-    score += 6;
-  }
-  if (text.includes('deepseek')) {
-    score += 6;
-  }
-  if (text.includes('qwen')) {
-    score += 5;
-  }
-  if (text.includes('grok')) {
-    score += 4;
-  }
-
-  const contextLength = parseFiniteNumber(
-    model?.top_provider?.context_length,
-    0,
-  );
-  if (contextLength > 0) {
-    score += Math.log10(contextLength) * 1.5;
-  }
-
-  return score;
-}
-
-function modelCostPerMillion(model) {
-  const promptPerToken = parseFiniteNumber(model?.pricing?.prompt, NaN);
-  const completionPerToken = parseFiniteNumber(model?.pricing?.completion, NaN);
-
-  if (
-    !Number.isFinite(promptPerToken) ||
-    !Number.isFinite(completionPerToken)
-  ) {
-    return Number.POSITIVE_INFINITY;
-  }
-
-  return (promptPerToken + completionPerToken) * 1000000;
-}
-
-function buildModelPick(model, rankLabel, rankPosition) {
-  const promptCost = formatUsdPerMillion(model?.pricing?.prompt);
-  const completionCost = formatUsdPerMillion(model?.pricing?.completion);
-  const contextLength = formatInteger(model?.top_provider?.context_length);
-
-  return {
-    label: `${rankPosition}. ${model.id}`,
-    description: `${rankLabel} | In: $${promptCost}/1M | Out: $${completionCost}/1M`,
-    detail: `${model.name || 'Sin nombre'} | Contexto: ${contextLength}`,
-    modelId: model.id,
-  };
-}
-
-function rankTopCodingModels(allModels) {
-  const candidates = allModels
-    .filter((model) => isCodingCandidate(model))
-    .map((model) => {
-      const quality = codingCapabilityScore(model);
-      const costPer1m = modelCostPerMillion(model);
-      const value = quality / Math.max(costPer1m, 0.01);
-
-      return {
-        model,
-        quality,
-        costPer1m,
-        value,
-      };
-    })
-    .filter((entry) => Number.isFinite(entry.quality) && entry.quality > 0);
-
-  const topQuality = [...candidates]
-    .sort((a, b) => b.quality - a.quality || a.costPer1m - b.costPer1m)
-    .slice(0, MAX_MODELS_PER_SECTION)
-    .map((entry) => entry.model);
-
-  const topValue = [...candidates]
-    .filter((entry) => Number.isFinite(entry.costPer1m) && entry.costPer1m > 0)
-    .sort((a, b) => b.value - a.value || a.costPer1m - b.costPer1m)
-    .slice(0, MAX_MODELS_PER_SECTION)
-    .map((entry) => entry.model);
-
-  return { topQuality, topValue };
-}
-
 function getApiKey() {
   const config = vscode.workspace.getConfiguration('budgetOpenrouter');
   return config.get('apiKey') || process.env.OPENROUTER_API_KEY || '';
+}
+
+function getRefreshIntervalMs() {
+  const config = vscode.workspace.getConfiguration('budgetOpenrouter');
+  const minutes = config.get('refreshIntervalMinutes');
+  const parsed = Number(minutes);
+  const clamped = Number.isFinite(parsed) && parsed >= 1 ? parsed : 30;
+  return clamped * 60 * 1000;
 }
 
 function ratioToColor(remainingRatio) {
@@ -234,78 +88,7 @@ async function fetchKeyUsage(apiKey) {
   return payload.data;
 }
 
-async function fetchModelsCatalog() {
-  const response = await fetch(OPENROUTER_MODELS_URL, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status} (${response.statusText})`);
-  }
-
-  const payload = await response.json();
-  if (!Array.isArray(payload?.data)) {
-    throw new Error('Catalogo de modelos invalido');
-  }
-
-  return payload.data;
-}
-
-async function showTopCodingModels() {
-  const picked = await vscode.window.withProgress(
-    {
-      location: vscode.ProgressLocation.Notification,
-      title: 'OpenRouter: cargando modelos top para programacion...',
-      cancellable: false,
-    },
-    async () => {
-      const allModels = await fetchModelsCatalog();
-      const { topQuality, topValue } = rankTopCodingModels(allModels);
-
-      const picks = [
-        {
-          label: 'Top calidad (ranking dinamico)',
-          kind: vscode.QuickPickItemKind.Separator,
-        },
-        ...topQuality.map((model, index) =>
-          buildModelPick(model, 'Top calidad', index + 1),
-        ),
-        {
-          label: 'Mejor costo/rendimiento (ranking dinamico)',
-          kind: vscode.QuickPickItemKind.Separator,
-        },
-        ...topValue.map((model, index) =>
-          buildModelPick(model, 'Mejor costo/rendimiento', index + 1),
-        ),
-      ];
-
-      if (!picks.length) {
-        throw new Error(
-          'No se encontraron modelos recomendados en el catalogo actual',
-        );
-      }
-
-      return vscode.window.showQuickPick(picks, {
-        matchOnDescription: true,
-        matchOnDetail: true,
-        placeHolder:
-          'Selecciona un modelo para copiar su ID (calculado en vivo)',
-      });
-    },
-  );
-
-  if (!picked || !picked.modelId) {
-    return;
-  }
-
-  await vscode.env.clipboard.writeText(picked.modelId);
-  vscode.window.showInformationMessage(`Modelo copiado: ${picked.modelId}`);
-}
-
-async function updateStatusBar(statusBarItem) {
+async function updateStatusBar(statusBarItem, source = 'manual') {
   const apiKey = getApiKey();
 
   if (!apiKey) {
@@ -316,6 +99,7 @@ async function updateStatusBar(statusBarItem) {
     return;
   }
 
+  log(`Refresh iniciado (origen: ${source})`);
   statusBarItem.text = '$(sync~spin) OpenRouter: actualizando...';
   statusBarItem.tooltip = 'Consultando uso en OpenRouter...';
 
@@ -356,6 +140,7 @@ async function updateStatusBar(statusBarItem) {
           ? String(data.limit_reset)
           : null;
 
+    log(`Refresh completado. Restante: ${remaining} / Total: ${total}`);
     statusBarItem.text = `$(graph) OpenRouter: ${remaining}/${total}`;
     statusBarItem.tooltip = [
       `Presupuesto total: ${total}${resetCycle ? ` (ciclo ${resetCycle})` : ''}`,
@@ -367,6 +152,7 @@ async function updateStatusBar(statusBarItem) {
       'Click para refrescar',
     ].join('\n');
   } catch (error) {
+    log(`Refresh fallido: ${error.message}`);
     statusBarItem.text = '$(warning) OpenRouter: error';
     statusBarItem.tooltip = `No se pudo consultar OpenRouter.\n${error.message}`;
   }
@@ -385,42 +171,55 @@ function activate(context) {
   statusBarItem.command = REFRESH_COMMAND;
   statusBarItem.show();
 
+  let autoRefreshTimer = null;
+
+  function scheduleAutoRefresh() {
+    if (autoRefreshTimer) {
+      clearInterval(autoRefreshTimer);
+    }
+    const intervalMs = getRefreshIntervalMs();
+    log(`Auto-refresh programado cada ${intervalMs / 60000} minuto(s)`);
+    autoRefreshTimer = setInterval(async () => {
+      await updateStatusBar(statusBarItem, 'auto');
+    }, intervalMs);
+  }
+
   const refreshDisposable = vscode.commands.registerCommand(
     REFRESH_COMMAND,
     async function () {
-      await updateStatusBar(statusBarItem);
-    },
-  );
-
-  const showTopModelsDisposable = vscode.commands.registerCommand(
-    SHOW_TOP_MODELS_COMMAND,
-    async function () {
-      try {
-        await showTopCodingModels();
-      } catch (error) {
-        vscode.window.showErrorMessage(
-          `No se pudieron cargar los modelos top: ${error.message}`,
-        );
-      }
+      await updateStatusBar(statusBarItem, 'manual');
     },
   );
 
   const configurationDisposable = vscode.workspace.onDidChangeConfiguration(
     async (event) => {
       if (event.affectsConfiguration('budgetOpenrouter.apiKey')) {
-        await updateStatusBar(statusBarItem);
+        await updateStatusBar(statusBarItem, 'config-change');
+      }
+      if (
+        event.affectsConfiguration('budgetOpenrouter.refreshIntervalMinutes')
+      ) {
+        scheduleAutoRefresh();
       }
     },
   );
 
   context.subscriptions.push(
     refreshDisposable,
-    showTopModelsDisposable,
     configurationDisposable,
     statusBarItem,
+    {
+      dispose: () => {
+        if (autoRefreshTimer) {
+          clearInterval(autoRefreshTimer);
+        }
+      },
+    },
+    outputChannel,
   );
 
-  updateStatusBar(statusBarItem);
+  updateStatusBar(statusBarItem, 'startup');
+  scheduleAutoRefresh();
 }
 
 // This method is called when your extension is deactivated

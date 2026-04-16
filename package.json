@@ -2,7 +2,7 @@
   "name": "budget-openrouter",
   "publisher": "alepiumetti",
   "displayName": "budget-openrouter",
-  "description": "Para ver cuandos creditos me quedan en open router",
+  "description": "Para ver cuantos creditos me quedan en open router",
   "icon": "images/icon.png",
   "repository": {
     "type": "git",
@@ -16,9 +16,7 @@
     "Other"
   ],
   "activationEvents": [
-    "onStartupFinished",
-    "onCommand:budget-openrouter.refresh",
-    "onCommand:budget-openrouter.showTopModels"
+    "onStartupFinished"
   ],
   "main": "./extension.js",
   "contributes": {
@@ -26,10 +24,6 @@
       {
         "command": "budget-openrouter.refresh",
         "title": "OpenRouter: Refresh Budget"
-      },
-      {
-        "command": "budget-openrouter.showTopModels",
-        "title": "OpenRouter: Show Top Coding Models"
       }
     ],
     "configuration": {
@@ -39,6 +33,13 @@
           "type": "string",
           "default": "",
           "markdownDescription": "OpenRouter API key usada para consultar uso y créditos restantes. Alternativa: variable de entorno OPENROUTER_API_KEY.",
+          "scope": "application"
+        },
+        "budgetOpenrouter.refreshIntervalMinutes": {
+          "type": "number",
+          "default": 30,
+          "minimum": 1,
+          "markdownDescription": "Intervalo en minutos para el refresco automático de los datos de OpenRouter. Mínimo: 1 minuto.",
           "scope": "application"
         }
       }
