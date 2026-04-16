@@ -24,6 +24,14 @@
       {
         "command": "budget-openrouter.refresh",
         "title": "OpenRouter: Refresh Budget"
+      },
+      {
+        "command": "budget-openrouter.setApiKey",
+        "title": "OpenRouter: Set API Key (Secure)"
+      },
+      {
+        "command": "budget-openrouter.clearApiKey",
+        "title": "OpenRouter: Clear Stored API Key"
       }
     ],
     "configuration": {
@@ -32,7 +40,9 @@
         "budgetOpenrouter.apiKey": {
           "type": "string",
           "default": "",
-          "markdownDescription": "OpenRouter API key usada para consultar uso y créditos restantes. Alternativa: variable de entorno OPENROUTER_API_KEY.",
+          "markdownDescription": "(Fallback) OpenRouter API key usada para consultar uso y créditos restantes. Recomendado: usar el comando `OpenRouter: Set API Key (Secure)` o la variable de entorno OPENROUTER_API_KEY.",
+          "markdownDeprecationMessage": "Configuración en texto plano. Usá el comando `OpenRouter: Set API Key (Secure)` para guardarla en Secret Storage de VS Code.",
+          "ignoreSync": true,
           "scope": "application"
         },
         "budgetOpenrouter.refreshIntervalMinutes": {
